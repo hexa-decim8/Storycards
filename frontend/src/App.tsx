@@ -2,35 +2,57 @@ import { useEffect, useState } from "react";
 import * as api from "./api/client";
 import type { Workspace as WorkspaceType } from "./types";
 import WorkspaceView from "./components/Workspace";
+import ProjectPicker from "./components/ProjectPicker";
 import { useWorkspace } from "./hooks/useWorkspace";
 
 export default function App() {
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceType[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { workspace, loading, error, reload, addZone, removeZone, addCard, editCard, removeCard, setWorkspace } =
+  const { workspace, loading, error, addZone, removeZone, addCard, editCard, removeCard, setWorkspace } =
     useWorkspace(activeId);
 
   useEffect(() => {
-    api.listWorkspaces().then((list) => {
+    if (!activeProjectId) {
+      setWorkspaces([]);
+      setActiveId(null);
+      return;
+    }
+    api.listWorkspaces(activeProjectId).then((list) => {
       setWorkspaces(list);
       if (list.length > 0) {
         setActiveId(list[0].id);
+      } else {
+        setActiveId(null);
       }
     });
-  }, []);
+  }, [activeProjectId]);
 
   const handleCreateWorkspace = async () => {
+    if (!activeProjectId) return;
     const name = prompt("Workspace name:");
     if (!name?.trim()) return;
-    const ws = await api.createWorkspace(name.trim());
+    const ws = await api.createWorkspace(activeProjectId, name.trim());
     setWorkspaces((prev) => [...prev, ws]);
     setActiveId(ws.id);
   };
 
+  if (!activeProjectId) {
+    return <ProjectPicker onSelect={setActiveProjectId} />;
+  }
+
   return (
     <div className="app">
       <div className="app-header">
-        <h1>Storycards</h1>
+        <div className="app-header-left">
+          <button
+            className="btn btn-secondary back-btn"
+            onClick={() => setActiveProjectId(null)}
+          >
+            ← Projects
+          </button>
+          <h1>Storycards</h1>
+        </div>
         <div className="workspace-list">
           {workspaces.map((ws) => (
             <button

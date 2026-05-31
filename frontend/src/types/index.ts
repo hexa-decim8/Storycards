@@ -21,6 +21,7 @@ export interface Zone {
 
 export interface Workspace {
   id: string;
+  project_id: string;
   name: string;
   created_at: string;
   updated_at: string;
@@ -28,4 +29,15 @@ export interface Workspace {
 
 export interface WorkspaceDetail extends Workspace {
   zones: Zone[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectDetail extends Project {
+  workspaces: Workspace[];
 }

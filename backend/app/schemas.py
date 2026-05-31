@@ -4,6 +4,30 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+# ── Project ────────────────────────────────────────────────
+
+
+class ProjectCreate(BaseModel):
+    name: str
+
+
+class ProjectUpdate(BaseModel):
+    name: str | None = None
+
+
+class ProjectOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ProjectDetail(ProjectOut):
+    workspaces: list["WorkspaceOut"] = []
+
+
 # ── Workspace ──────────────────────────────────────────────
 
 
@@ -17,6 +41,7 @@ class WorkspaceUpdate(BaseModel):
 
 class WorkspaceOut(BaseModel):
     id: uuid.UUID
+    project_id: uuid.UUID
     name: str
     created_at: datetime
     updated_at: datetime

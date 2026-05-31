@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   DndContext,
-  DragOverlay,
   closestCorners,
   KeyboardSensor,
   PointerSensor,

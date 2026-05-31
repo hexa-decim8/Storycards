@@ -4,14 +4,65 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Card, Workspace, Zone
+from app.models import Card, Project, Workspace, Zone
+
+
+# ── Projects ───────────────────────────────────────────────
+
+
+async def get_projects(db: AsyncSession) -> list[Project]:
+    result = await db.execute(select(Project).order_by(Project.created_at))
+    return list(result.scalars().all())
+
+
+async def get_project(db: AsyncSession, project_id: uuid.UUID) -> Project | None:
+    result = await db.execute(
+        select(Project)
+        .where(Project.id == project_id)
+        .options(selectinload(Project.workspaces))
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_project_by_name(db: AsyncSession, name: str) -> Project | None:
+    result = await db.execute(
+        select(Project)
+        .where(Project.name == name)
+        .options(selectinload(Project.workspaces))
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_project(db: AsyncSession, name: str) -> Project:
+    project = Project(name=name)
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    return project
+
+
+async def update_project(db: AsyncSession, project: Project, name: str | None) -> Project:
+    if name is not None:
+        project.name = name
+    await db.commit()
+    await db.refresh(project)
+    return project
+
+
+async def delete_project(db: AsyncSession, project: Project) -> None:
+    await db.delete(project)
+    await db.commit()
 
 
 # ── Workspaces ─────────────────────────────────────────────
 
 
-async def get_workspaces(db: AsyncSession) -> list[Workspace]:
-    result = await db.execute(select(Workspace).order_by(Workspace.created_at))
+async def get_workspaces(db: AsyncSession, project_id: uuid.UUID) -> list[Workspace]:
+    result = await db.execute(
+        select(Workspace)
+        .where(Workspace.project_id == project_id)
+        .order_by(Workspace.created_at)
+    )
     return list(result.scalars().all())
 
 
@@ -24,8 +75,8 @@ async def get_workspace(db: AsyncSession, workspace_id: uuid.UUID) -> Workspace 
     return result.scalar_one_or_none()
 
 
-async def create_workspace(db: AsyncSession, name: str) -> Workspace:
-    ws = Workspace(name=name)
+async def create_workspace(db: AsyncSession, project_id: uuid.UUID, name: str) -> Workspace:
+    ws = Workspace(project_id=project_id, name=name)
     db.add(ws)
     await db.commit()
     await db.refresh(ws)

@@ -9,16 +9,6 @@ from app.database import get_db
 router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
 
 
-@router.get("", response_model=list[schemas.WorkspaceOut])
-async def list_workspaces(db: AsyncSession = Depends(get_db)):
-    return await crud.get_workspaces(db)
-
-
-@router.post("", response_model=schemas.WorkspaceOut, status_code=201)
-async def create_workspace(body: schemas.WorkspaceCreate, db: AsyncSession = Depends(get_db)):
-    return await crud.create_workspace(db, body.name)
-
-
 @router.get("/{workspace_id}", response_model=schemas.WorkspaceDetail)
 async def get_workspace(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     ws = await crud.get_workspace(db, workspace_id)

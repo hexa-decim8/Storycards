@@ -9,10 +9,32 @@ class Base(DeclarativeBase):
     pass
 
 
+class Project(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    workspaces: Mapped[list["Workspace"]] = relationship(
+        back_populates="project", cascade="all, delete-orphan", order_by="Workspace.created_at"
+    )
+
+
 class Workspace(Base):
     __tablename__ = "workspaces"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=True
+    )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -23,6 +45,7 @@ class Workspace(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    project: Mapped["Project"] = relationship(back_populates="workspaces")
     zones: Mapped[list["Zone"]] = relationship(
         back_populates="workspace", cascade="all, delete-orphan", order_by="Zone.display_order"
     )

@@ -15,26 +15,18 @@ services:
       timeout: 3s
       retries: 5
 
-  backend:
-    image: ${DOCKERHUB_USERNAME:-hexadecim8}/storycards-backend:${IMAGE_TAG:-latest}
-    build: ./backend
+  app:
+    image: ${DOCKERHUB_USERNAME:-hexadecim8}/storycards:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
-      - "8000:8000"
+      - "80:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-storycards}:${POSTGRES_PASSWORD:-storycards}@db:5432/${POSTGRES_DB:-storycards}
     depends_on:
       db:
         condition: service_healthy
-
-  frontend:
-    image: ${DOCKERHUB_USERNAME:-hexadecim8}/storycards-frontend:${IMAGE_TAG:-latest}
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend/src:/app/src
 
 volumes:
   pgdata:

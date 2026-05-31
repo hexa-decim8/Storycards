@@ -1,17 +1,43 @@
 import axios from "axios";
-import type { Card, WorkspaceDetail, Workspace, Zone } from "../types";
+import type { Card, Project, ProjectDetail, WorkspaceDetail, Workspace, Zone } from "../types";
 
 const api = axios.create({ baseURL: "/api" });
 
-// ── Workspaces ────────────────────────────────────────────
+// ── Projects ──────────────────────────────────────────────
 
-export async function listWorkspaces(): Promise<Workspace[]> {
-  const { data } = await api.get("/workspaces");
+export async function listProjects(): Promise<Project[]> {
+  const { data } = await api.get("/projects");
   return data;
 }
 
-export async function createWorkspace(name: string): Promise<Workspace> {
-  const { data } = await api.post("/workspaces", { name });
+export async function createProject(name: string): Promise<Project> {
+  const { data } = await api.post("/projects", { name });
+  return data;
+}
+
+export async function getProject(id: string): Promise<ProjectDetail> {
+  const { data } = await api.get(`/projects/${id}`);
+  return data;
+}
+
+export async function getProjectByName(name: string): Promise<ProjectDetail> {
+  const { data } = await api.get(`/projects/by-name/${encodeURIComponent(name)}`);
+  return data;
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  await api.delete(`/projects/${id}`);
+}
+
+// ── Workspaces ────────────────────────────────────────────
+
+export async function listWorkspaces(projectId: string): Promise<Workspace[]> {
+  const { data } = await api.get(`/projects/${projectId}/workspaces`);
+  return data;
+}
+
+export async function createWorkspace(projectId: string, name: string): Promise<Workspace> {
+  const { data } = await api.post(`/projects/${projectId}/workspaces`, { name });
   return data;
 }
 
